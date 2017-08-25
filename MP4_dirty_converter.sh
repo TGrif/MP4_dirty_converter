@@ -41,7 +41,7 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
         echo "$1 requires an argument" >&2;
         exit
       else
-        DIR="$2"/*   #TODO vérifier le chemin du repertoire
+        DIR="$2"/*
         echo -e "\033[0;32mparsing\033[0m $2 directory full of dirty MP4"
         shift 2
       fi;;
@@ -59,6 +59,8 @@ done
 
 #TODO add --format parameter and convert a directory full of dirty m4a
 
+
+START=$(date +%s)
 
 
 for file in $DIR
@@ -86,7 +88,16 @@ do
 done
 
 
-echo -e "\033[1mDone.\033[0m" #TODO afficher le temps de conversion
+
+TIME=$(($(date +%s) - $START))  # https://github.com/JakeWharton/mkvdts2ac3
+
+echo
+echo -n $"Total processing time:	"
+printf "%02d:%02d:%02d " $((TIME / 3600)) $(((TIME / 60) % 60)) $((TIME % 60))
+echo $"($TIME seconds)"
+
+
+echo -e "\033[1mDone.\033[0m"
 echo
 
 
