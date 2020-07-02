@@ -3,18 +3,14 @@ v=0.3
 
 DIR=*
 
-echo
 echo -e "\033[1mMP4 Dirty Converter\033[0m"
 echo -e "Convert directory full of dirty MP4 to clean cool mp3"
 echo "TGrif - direct-shoot.com / WTFPL 2017"
+echo
 
 
-if which ffmpeg > /dev/null;
+if ! which ffmpeg > /dev/null;
 then
-  echo
-  echo $(ffmpeg -version | awk 'NR==1;')  # http://unix.stackexchange.com/a/139099
-  echo
-else
   echo
   echo -e "\033[31mFatal error: ffmpeg should be installed on your system!\033[0m"
   exit
@@ -34,7 +30,10 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
       echo -e
       exit;;
     -v|--version)
+      echo
       echo "MP4 Dirty Converter Version: $v"
+      echo $(ffmpeg -version | awk 'NR==1;')  # http://unix.stackexchange.com/a/139099
+      echo
       exit;;
     -f|--format)
       echo "Sorry, --format option not implemented yet"
@@ -42,7 +41,7 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
     -d|--directory)
       if [ "$2" = "" ];
       then
-        echo "$1 requires an argument" >&2;
+        echo "Error: $1 requires an argument" >&2;
         exit
       else
         DIR="$2"/*
@@ -50,8 +49,14 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
         shift 2
       fi;;
     -o|--output)
-      echo "Sorry, --output option not implemented yet"
-      exit;;
+      if [ "$2" = "" ];
+      then
+        echo "Error: $1 requires an argument" >&2;
+        exit
+      else
+        OUT="$2"
+        shift 2
+      fi;;
     -R|--remove)
       REMOVE=true
       shift 1;;
@@ -69,6 +74,7 @@ START=$(date +%s)
 
 for file in $DIR
 do
+  # TODO check if file is a directory
   FORMAT=$(ffprobe "$file" -show_format 2>/dev/null | awk -F "=" '$1 == "format_name" {print $2}')  # http://superuser.com/a/439812
   if [ "$FORMAT" = "mov,mp4,m4a,3gp,3g2,mj2" ];
   then
@@ -86,6 +92,13 @@ do
       rm "$file"
       echo -e " \e[92m✓\033[0m"
     fi
+
+    if [ -n "$OUT" ];  # https://stackoverflow.com/a/3601734/5156280
+    then
+      mkdir -p "$OUT"
+      mv "$RENAME.mp3" "$OUT/$RENAME.mp3"
+    fi
+
   else
     echo -e "\e[94mskip\033[0m $file $FORMAT file"
   fi
