@@ -1,4 +1,5 @@
 #!/bin/bash
+v=0.3
 
 DIR=*
 
@@ -6,7 +7,6 @@ echo
 echo -e "\033[1mMP4 Dirty Converter\033[0m"
 echo -e "Convert directory full of dirty MP4 to clean cool mp3"
 echo "TGrif - direct-shoot.com / WTFPL 2017"
-
 
 
 if which ffmpeg > /dev/null;
@@ -21,19 +21,23 @@ else
 fi
 
 
-
 while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
   case "$1" in
     -h|--help)
       echo -e "Usage:";
       echo -e "-h --help       show help & exit"
       echo -e "-v --version    show version & exit"
+      echo -e "-f --format     specify file format to convert (default is mp4)"
       echo -e "-d --directory  specify directory (default is current directory)"
+      echo -e "-o --output     specify output directory (default is current directory)"
       echo -e "-R --remove     delete MP4 source file after convertion"
       echo -e
       exit;;
     -v|--version)
-      echo "MP4 Dirty Converter Version: 0.2"
+      echo "MP4 Dirty Converter Version: $v"
+      exit;;
+    -f|--format)
+      echo "Sorry, --format option not implemented yet"
       exit;;
     -d|--directory)
       if [ "$2" = "" ];
@@ -45,6 +49,9 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
         echo -e "\033[0;32mparsing\033[0m $2 directory full of dirty MP4"
         shift 2
       fi;;
+    -o|--output)
+      echo "Sorry, --output option not implemented yet"
+      exit;;
     -R|--remove)
       REMOVE=true
       shift 1;;
@@ -57,11 +64,8 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
   esac
 done
 
-#TODO add --format parameter and convert a directory full of dirty m4a
-
 
 START=$(date +%s)
-
 
 for file in $DIR
 do
@@ -88,7 +92,6 @@ do
 done
 
 
-
 TIME=$(($(date +%s) - $START))  # https://github.com/JakeWharton/mkvdts2ac3
 
 echo
@@ -99,6 +102,3 @@ echo $"($TIME seconds)"
 
 echo -e "\033[1mDone.\033[0m"
 echo
-
-
-
