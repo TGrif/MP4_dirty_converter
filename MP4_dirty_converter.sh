@@ -2,6 +2,8 @@
 v=0.3
 
 DIR=*
+sample_rate=44000
+
 
 echo -e "\033[1mMP4 Dirty Converter\033[0m"
 echo -e "Convert directory full of dirty MP4 to clean cool mp3"
@@ -21,12 +23,13 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
   case "$1" in
     -h|--help)
       echo -e "Usage:";
-      echo -e "-h --help       show help & exit"
-      echo -e "-v --version    show version & exit"
-      echo -e "-f --format     specify file format to convert (default is mp4)"
-      echo -e "-d --directory  specify directory (default is current directory)"
-      echo -e "-o --output     specify output directory (default is current directory)"
-      echo -e "-R --remove     delete MP4 source file after convertion"
+      echo -e "-h --help          show help & exit"
+      echo -e "-v --version       show version & exit"
+      echo -e "-f --format        specify file format to convert (default is mp4)"
+      echo -e "-d --directory     specify directory (default is current directory)"
+      echo -e "-o --output        specify output directory (default is current directory)"
+      echo -e "-s --sample_rate   specify convertion sample rate (default is 48k)"
+      echo -e "-R --remove        delete MP4 source file after convertion"
       echo -e
       exit;;
     -v|--version)
@@ -57,6 +60,17 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
         OUT="$2"
         shift 2
       fi;;
+    -s|--sample_rate)
+      # if [ "$2" = "" ];
+      # then
+      #   echo "Error: $1 requires an argument" >&2;
+      #   exit
+      # else
+      #   sample_rate="$2"
+      #   shift 2
+      # fi;;
+      echo "Sorry, --sample_rate option not implemented yet"
+      exit;;
     -R|--remove)
       REMOVE=true
       shift 1;;
@@ -83,7 +97,20 @@ do
 
     RENAME="${file%.*}"  # https://stackoverflow.com/a/965072/5156280
 
-    ffmpeg -loglevel panic -i "$file" -vn -acodec libmp3lame -ac 2 -ab 160k -ar 48000 "$RENAME.mp3"
+    # TODO loglevel not used
+    # TODO add taux d'échantillonage variable
+    ffmpeg -loglevel panic -i "$file" -vn -acodec libmp3lame -ac 2 -ab 160k -ar $sample_rate "$RENAME.mp3" 2>/dev/null &
+    pid=$!  # https://stackoverflow.com/q/12498304/5156280
+
+    spin='-\|/'
+
+    # i=0  # TODO
+    # while kill -0 $pid 2>/dev/null
+    # do
+    #   i=$(( (i+1) %4 ))
+    #   printf "\r${spin:$i:1}"
+    #   sleep .1
+    # done
     echo -e " \e[92m✓\033[0m"
 
     if [ "$REMOVE" = true ];
@@ -100,7 +127,7 @@ do
     fi
 
   else
-    echo -e "\e[94mskip\033[0m $file $FORMAT file"
+    echo -e "\e[94mskip\033[0m $file"
   fi
 done
 
