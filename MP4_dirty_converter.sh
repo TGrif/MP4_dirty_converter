@@ -1,7 +1,8 @@
 #!/bin/bash
-v=0.3
+v=0.4
 
 DIR=*
+START=$(date +%s)
 sample_rate=44000
 
 
@@ -19,7 +20,7 @@ then
 fi
 
 
-while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
+while [ "$#" -gt 0 ]; do
   case "$1" in
     -h|--help)
       echo -e "Usage:";
@@ -28,14 +29,14 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
       echo -e "-f --format        specify file format to convert (default is mp4)"
       echo -e "-d --directory     specify directory (default is current directory)"
       echo -e "-o --output        specify output directory (default is current directory)"
-      echo -e "-s --sample_rate   specify convertion sample rate (default is 48k)"
-      echo -e "-R --remove        delete MP4 source file after convertion"
+      echo -e "-s --sample_rate   specify convertion sample rate (default is 44k)"
+      echo -e "-R --remove        delete MP4 original file after convertion"
       echo -e
       exit;;
     -v|--version)
       echo
       echo "MP4 Dirty Converter Version: $v"
-      echo $(ffmpeg -version | awk 'NR==1;')  # http://unix.stackexchange.com/a/139099
+      echo $(ffmpeg -version | awk 'NR==1;')
       echo
       exit;;
     -f|--format)
@@ -47,7 +48,7 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
         echo "Error: $1 requires an argument" >&2;
         exit
       else
-        DIR="$2"/*
+        DIR="$2"/*  # TODO handle space in DIR param
         echo -e "\033[0;32mparsing\033[0m $2 directory full of dirty MP4"
         shift 2
       fi;;
@@ -84,23 +85,24 @@ while [ "$#" -gt 0 ]; do    # https://stackoverflow.com/a/31443098/5156280
 done
 
 
-START=$(date +%s)
-
+# OIFS="$IFS"
+# IFS=$'\n'
 for file in $DIR
 do
   # TODO check if file is a directory
+  echo "$file"
   FORMAT=$(ffprobe "$file" -show_format 2>/dev/null | awk -F "=" '$1 == "format_name" {print $2}')  # http://superuser.com/a/439812
   if [ "$FORMAT" = "mov,mp4,m4a,3gp,3g2,mj2" ];
   then
     MIMETYPE=$(file -b --mime-type "$file")
     echo -n -e "\033[0;32mconvert\033[0m $file [$MIMETYPE]"
 
-    RENAME="${file%.*}"  # https://stackoverflow.com/a/965072/5156280
+    RENAME="${file%.*}"
 
     # TODO loglevel not used
     # TODO add taux d'échantillonage variable
     ffmpeg -loglevel panic -i "$file" -vn -acodec libmp3lame -ac 2 -ab 160k -ar $sample_rate "$RENAME.mp3" 2>/dev/null &
-    pid=$!  # https://stackoverflow.com/q/12498304/5156280
+    pid=$!
 
     spin='-\|/'
 
@@ -120,7 +122,7 @@ do
       echo -e " \e[92m✓\033[0m"
     fi
 
-    if [ -n "$OUT" ];  # https://stackoverflow.com/a/3601734/5156280
+    if [ -n "$OUT" ];
     then
       mkdir -p "$OUT"
       mv "$RENAME.mp3" "$OUT/$RENAME.mp3"
@@ -129,10 +131,12 @@ do
   else
     echo -e "\e[94mskip\033[0m $file"
   fi
+# read line
 done
+# IFS="$OIFS"
 
 
-TIME=$(($(date +%s) - $START))  # https://github.com/JakeWharton/mkvdts2ac3
+TIME=$(($(date +%s) - $START))
 
 echo
 echo -n $"Total processing time:	"
